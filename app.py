@@ -90,6 +90,7 @@ def analyze_endpoint():
     result = analyze_message(message)
     return jsonify(result)
 
+# Modify the main block to work with both direct Python and Gunicorn
 if __name__ == "__main__":
     # Test API connection first
     try:
@@ -100,5 +101,5 @@ if __name__ == "__main__":
         print(f"API connection failed: {e}")
         exit(1)
         
-    # Run the app on your local network
+    # Run the app (will only run when directly executed, not with Gunicorn)
     app.run(host='0.0.0.0', debug=True, port=5000)
