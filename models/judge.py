@@ -41,15 +41,11 @@ class Judge:
             similarity = best_match['similarity']
             logger.info(f"Best match similarity score: {similarity:.2f}")
             
-            # If similarity is above threshold, return cached response
-            if similarity > 0.65:  # Threshold is 0.65 (65%)
+            # Increased threshold to 0.90 (90%) for more accurate matches
+            if similarity > 0.90:  # Higher threshold for more accurate matching
                 logger.info(f"Found highly similar case with similarity: {similarity:.2f}")
-                verdict_data = {
-                    'verdict': 'SCAM' if 'scam' in best_match['verdict']['verdict'].lower() else 'NOT A SCAM',
-                    'summary': 'Cached verdict based on similar previous case',
-                    'evidence': ['Similar case found in database with {:.0f}% match'.format(similarity * 100)]
-                }
-                return True, verdict_data
+                # Return the exact same verdict as the previous case
+                return True, best_match['verdict']
                 
         logger.info("No highly similar cases found")
         return False, {}
@@ -134,4 +130,3 @@ class Judge:
 Note: This response is based on a similar previous case. The analysis and recommendations should be applicable to your situation.
 Reference case timestamp: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(case['timestamp']))}"""
         logger.info("Formatted cached response")
-        return formatted_response
