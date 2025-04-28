@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Add this import
 from config import GEMINI_KEY_1, GEMINI_KEY_2
 from utils.gemini_setup import setup_gemini
 from models.ai_lawyer import AILawyer
@@ -6,6 +7,7 @@ from models.judge import Judge
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 def analyze_message(message: str):
     """Analyze a custom message for potential scams"""
@@ -21,17 +23,20 @@ def analyze_message(message: str):
     if has_similar:
         return {
             "message": message,
-            "verdict": cached_verdict,
+            "verdict": cached_verdict['verdict'],
+            "summary": cached_verdict['summary'],
+            "evidence": cached_verdict['evidence'],
             "source": "cached"
         }
     
     # If no similar case found, check if we need a full debate
-    # For simple cases, we can get a direct verdict
     if isinstance(message, str) and len(message.split()) < 50:  # Simple case threshold
-        verdict = judge.direct_verdict(message)
+        verdict_data = judge.direct_verdict(message)
         return {
             "message": message,
-            "verdict": verdict,
+            "verdict": verdict_data['verdict'],
+            "summary": verdict_data['summary'],
+            "evidence": verdict_data['evidence'],
             "source": "direct"
         }
     
@@ -55,13 +60,13 @@ def analyze_message(message: str):
     defender_argument = defender.make_argument(message, prosecutor_argument)
     judge.record_argument(defender.name, defender_argument)
     
-    verdict = judge.analyze_debate(message)
+    verdict_data = judge.analyze_debate(message)
     
     return {
         "message": message,
-        "prosecutor_argument": prosecutor_argument,
-        "defender_argument": defender_argument,
-        "verdict": verdict,
+        "verdict": verdict_data['verdict'],
+        "summary": verdict_data['summary'],
+        "evidence": verdict_data['evidence'],
         "source": "debate"
     }
 
@@ -95,5 +100,5 @@ if __name__ == "__main__":
         print(f"API connection failed: {e}")
         exit(1)
         
-    # Continue with normal execution
-    app.run(debug=True, port=5000)
+    # Run the app on your local network
+    app.run(host='0.0.0.0', debug=True, port=5000)

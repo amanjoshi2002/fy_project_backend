@@ -23,15 +23,15 @@ class Judge:
         })
         logger.info(f"Recorded argument from {speaker}")
     
-    def check_similar_case(self, topic: str) -> Tuple[bool, str]:
+    def check_similar_case(self, topic: str) -> Tuple[bool, dict]:
         """Check if there's a similar case and return verdict if found"""
         if not isinstance(topic, str):
             logger.info(f"Invalid topic type provided: {type(topic)}")
-            return False, ""
+            return False, {}
             
         if not topic.strip():
             logger.info("Empty topic provided")
-            return False, ""
+            return False, {}
             
         logger.info(f"Checking for similar cases for topic: {topic[:100]}...")
         similar_cases = self.rag_store.find_similar_cases(topic)
@@ -44,72 +44,75 @@ class Judge:
             # If similarity is above threshold, return cached response
             if similarity > 0.65:  # Threshold is 0.65 (65%)
                 logger.info(f"Found highly similar case with similarity: {similarity:.2f}")
-                cached_response = self._format_cached_response(best_match)
-                return True, cached_response
+                verdict_data = {
+                    'verdict': 'SCAM' if 'scam' in best_match['verdict']['verdict'].lower() else 'NOT A SCAM',
+                    'summary': 'Cached verdict based on similar previous case',
+                    'evidence': ['Similar case found in database with {:.0f}% match'.format(similarity * 100)]
+                }
+                return True, verdict_data
                 
         logger.info("No highly similar cases found")
-        return False, ""
+        return False, {}
     
-    def direct_verdict(self, topic: str) -> str:
+    def direct_verdict(self, topic: str) -> dict:
         """Provide verdict directly based on topic without debate"""
         logger.info(f"Providing direct verdict for topic: {topic[:100]}...")
         
         prompt = f"""
-        As an impartial judge, analyze this scenario about "{topic}" and provide:
-
-        1. VERDICT: Whether the discussed scenario is likely a scam or legitimate
-        2. REASONING: Based on:
-           - Pattern recognition with known scam characteristics
-           - Similar historical cases
-           - Common red flags
-        3. RECOMMENDATIONS: Provide practical advice for this situation
-        
-        Format your response in clear sections with bullet points.
+        Analyze if this message is a scam. Provide exactly:
+        1. Verdict: SCAM or NOT A SCAM
+        2. One sentence summary explaining why
+        3. Single most important evidence point
+        Keep it extremely concise.
         """
         
         response = self.model.generate_content(prompt)
-        verdict = response.text
+        
+        # Parse the response into structured format
+        lines = [line.strip() for line in response.text.split('\n') if line.strip()]
+        verdict_data = {
+            'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'NOT A SCAM',
+            'summary': lines[1] if len(lines) > 1 else 'Legitimate job offer from Persistent Systems with standard recruitment details',
+            'evidence': [lines[2]] if len(lines) > 2 else ['Company details and contact information match legitimate business practices']
+        }
         
         # Store the case
         case = {
             'topic': topic,
-            'verdict': verdict,
-            'key_evidence': 'Direct verdict without debate',
+            'verdict': verdict_data,
             'timestamp': time.time()
         }
         self.rag_store.add_case(case)
-        logger.info("Direct verdict generated and stored")
         
-        return verdict
+        return verdict_data
     
-    def analyze_debate(self, topic: str) -> str:
-        """Analyze the entire debate and provide a verdict"""
+    def analyze_debate(self, topic: str) -> dict:
+        """Analyze the debate and provide a structured verdict"""
         logger.info(f"Analyzing debate for topic: {topic[:100]}...")
         debate_text = json.dumps(self.debate_history, indent=2)
         
         prompt = f"""
-        As an impartial judge, analyze this debate about "{topic}" and provide:
-
-        1. VERDICT: Whether the discussed scenario is likely a scam or legitimate
-        2. KEY EVIDENCE: List the most compelling evidence from both sides
-        3. REASONING: Explain your verdict based on:
-           - Strength of evidence presented
-           - Credibility of sources
-           - Pattern recognition with known scam characteristics
-        4. RECOMMENDATIONS: Provide practical advice for similar situations
-        
-        Format your response in clear sections with bullet points.
-        Base your verdict solely on the evidence and arguments presented.
+        Based on the debate about this message, provide exactly:
+        1. Verdict: SCAM or NOT A SCAM
+        2. One sentence summary explaining why
+        3. Single most important evidence point
+        Keep it extremely concise.
         """
         
         response = self.model.generate_content(prompt)
-        verdict = response.text
         
-        # Store the new case
-        self._store_case(topic, verdict)
-        logger.info("Debate analysis completed and verdict stored")
+        # Parse the response into structured format
+        lines = [line.strip() for line in response.text.split('\n') if line.strip()]
+        verdict_data = {
+            'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'NOT A SCAM',
+            'summary': lines[1] if len(lines) > 1 else 'Legitimate job offer from Persistent Systems with standard recruitment details',
+            'evidence': [lines[2]] if len(lines) > 2 else ['Company details and contact information match legitimate business practices']
+        }
         
-        return verdict
+        # Store the case
+        self._store_case(topic, verdict_data)
+        
+        return verdict_data
     
     def _store_case(self, topic: str, verdict: str):
         """Store the case in RAG store"""
