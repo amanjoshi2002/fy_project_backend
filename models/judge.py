@@ -76,6 +76,7 @@ class Judge:
         case = {
             'topic': topic,
             'verdict': verdict_data,
+            'key_evidence': verdict_data['evidence'][0],  # Ensure key_evidence is set
             'timestamp': time.time()
         }
         self.rag_store.add_case(case)
