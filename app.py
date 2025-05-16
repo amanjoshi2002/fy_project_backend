@@ -9,6 +9,8 @@ from models.judge import Judge
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+# Modify the analyze_message function to force a debate for testing purposes
+
 def analyze_message(message: str):
     """Analyze a custom message for potential scams"""
     # Ensure message is a string
@@ -29,16 +31,16 @@ def analyze_message(message: str):
             "source": "cached"
         }
     
-    # If no similar case found, check if we need a full debate
-    if isinstance(message, str) and len(message.split()) < 50:  # Simple case threshold
-        verdict_data = judge.direct_verdict(message)
-        return {
-            "message": message,
-            "verdict": verdict_data['verdict'],
-            "summary": verdict_data['summary'],
-            "evidence": verdict_data['evidence'],
-            "source": "direct"
-        }
+    # COMMENT OUT THIS SECTION TO FORCE DEBATE FOR TESTING
+    # if isinstance(message, str) and len(message.split()) < 50:  # Simple case threshold
+    #     verdict_data = judge.direct_verdict(message)
+    #     return {
+    #         "message": message,
+    #         "verdict": verdict_data['verdict'],
+    #         "summary": verdict_data['summary'],
+    #         "evidence": verdict_data['evidence'],
+    #         "source": "direct"
+    #     }
     
     # For complex cases, proceed with full debate
     prosecutor = AILawyer(

@@ -4,11 +4,41 @@ import google.generativeai as genai
 from utils.web_search import perform_web_search
 
 class AILawyer:
-    def __init__(self, name: str, model: genai.GenerativeModel, stance: str):
+    def __init__(self, name: str, model: genai.GenerativeModel, role_description: str):
         self.name = name
         self.model = model
-        self.stance = stance
-        self.evidence = []
+        self.role_description = role_description
+        self.stance = role_description  # Add this line to fix the error
+        self.evidence = []  # Initialize evidence list
+        
+    def make_argument(self, message: str, opposing_argument: str = None) -> str:
+        """Generate an argument about the message"""
+        if opposing_argument:
+            prompt = f"""
+            You are {self.name}, {self.role_description}.
+            
+            Analyze this message:
+            "{message}"
+            
+            The opposing counsel has argued:
+            "{opposing_argument}"
+            
+            Provide your counter-argument, focusing on evidence and reasoning.
+            Be thorough but concise (200-300 words).
+            """
+        else:
+            prompt = f"""
+            You are {self.name}, {self.role_description}.
+            
+            Analyze this message:
+            "{message}"
+            
+            Provide your opening argument, focusing on evidence and reasoning.
+            Be thorough but concise (200-300 words).
+            """
+            
+        response = self.model.generate_content(prompt)
+        return response.text
 
     def gather_evidence(self, topic: str) -> List[Dict]:
         """Gather evidence through web search"""

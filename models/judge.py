@@ -1,5 +1,6 @@
 import json
 import time
+import os
 import google.generativeai as genai
 from typing import Dict, Tuple
 from .rag_store import RAGStore
@@ -14,6 +15,12 @@ class Judge:
         self.debate_history = []
         self.rag_store = RAGStore()
         logger.info("Judge initialized with new RAGStore")
+        
+        # Create logs directory if it doesn't exist
+        self.logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "debate_logs")
+        if not os.path.exists(self.logs_dir):
+            os.makedirs(self.logs_dir)
+            logger.info(f"Created debate logs directory at {self.logs_dir}")
         
     def record_argument(self, speaker: str, argument: str):
         """Record each argument for final analysis"""
@@ -75,6 +82,9 @@ class Judge:
             'evidence': [lines[2]] if len(lines) > 2 else ['No specific evidence provided']
         }
         
+        # Save direct verdict to log file
+        self._save_direct_verdict_log(topic, verdict_data)
+        
         # Store the case
         case = {
             'topic': topic,
@@ -115,12 +125,15 @@ class Judge:
             'evidence': [lines[2]] if len(lines) > 2 else ['No specific evidence provided']
         }
         
+        # Save debate log to file
+        self._save_debate_log(topic, verdict_data)
+        
         # Store the case
         self._store_case(topic, verdict_data)
         
         return verdict_data
     
-    def _store_case(self, topic: str, verdict: str):
+    def _store_case(self, topic: str, verdict: dict):
         """Store the case in RAG store"""
         case = {
             'topic': topic,
@@ -132,7 +145,7 @@ class Judge:
         logger.info("Case stored in RAGStore")
     
     def _format_cached_response(self, case: Dict) -> str:
-        """Format cached case response"""
+        """Format cached response"""
         formatted_response = f"""[CACHED RESPONSE - Similarity: {case['similarity']:.2f}]
 
 {case['verdict']}
@@ -140,3 +153,54 @@ class Judge:
 Note: This response is based on a similar previous case. The analysis and recommendations should be applicable to your situation.
 Reference case timestamp: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(case['timestamp']))}"""
         logger.info("Formatted cached response")
+        return formatted_response
+        
+    def _save_debate_log(self, topic: str, verdict_data: dict):
+        """Save the debate to a text file for review"""
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        # Create a safe filename from the first few words of the topic
+        safe_topic = "".join(c if c.isalnum() else "_" for c in topic[:30])
+        filename = f"{timestamp}_{safe_topic}.txt"
+        filepath = os.path.join(self.logs_dir, filename)
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(f"DEBATE LOG - {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"{'='*80}\n\n")
+            f.write(f"TOPIC:\n{topic}\n\n")
+            f.write(f"{'='*80}\n\n")
+            f.write("DEBATE:\n")
+            
+            for entry in self.debate_history:
+                f.write(f"\n{entry['speaker']}:\n")
+                f.write(f"{entry['argument']}\n")
+                f.write(f"{'-'*80}\n")
+            
+            f.write(f"\n{'='*80}\n\n")
+            f.write("VERDICT:\n")
+            f.write(f"Verdict: {verdict_data['verdict']}\n")
+            f.write(f"Summary: {verdict_data['summary']}\n")
+            f.write(f"Evidence: {', '.join(verdict_data['evidence'])}\n")
+        
+        logger.info(f"Debate log saved to {filepath}")
+        return filepath
+        
+    def _save_direct_verdict_log(self, topic: str, verdict_data: dict):
+        """Save direct verdict to a text file for review"""
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        # Create a safe filename from the first few words of the topic
+        safe_topic = "".join(c if c.isalnum() else "_" for c in topic[:30])
+        filename = f"{timestamp}_{safe_topic}_direct.txt"
+        filepath = os.path.join(self.logs_dir, filename)
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(f"DIRECT VERDICT LOG - {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"{'='*80}\n\n")
+            f.write(f"TOPIC:\n{topic}\n\n")
+            f.write(f"{'='*80}\n\n")
+            f.write("VERDICT:\n")
+            f.write(f"Verdict: {verdict_data['verdict']}\n")
+            f.write(f"Summary: {verdict_data['summary']}\n")
+            f.write(f"Evidence: {', '.join(verdict_data['evidence'])}\n")
+        
+        logger.info(f"Direct verdict log saved to {filepath}")
+        return filepath
