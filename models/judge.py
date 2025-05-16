@@ -55,7 +55,10 @@ class Judge:
         logger.info(f"Providing direct verdict for topic: {topic[:100]}...")
         
         prompt = f"""
-        Analyze if this message is a scam. Provide exactly:
+        Analyze if this message is a scam:
+        "{topic}"
+        
+        Provide exactly:
         1. Verdict: SCAM or NOT A SCAM
         2. One sentence summary explaining why
         3. Single most important evidence point
@@ -68,8 +71,8 @@ class Judge:
         lines = [line.strip() for line in response.text.split('\n') if line.strip()]
         verdict_data = {
             'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'NOT A SCAM',
-            'summary': lines[1] if len(lines) > 1 else 'Legitimate job offer from Persistent Systems with standard recruitment details',
-            'evidence': [lines[2]] if len(lines) > 2 else ['Company details and contact information match legitimate business practices']
+            'summary': lines[1] if len(lines) > 1 else 'Analysis unavailable',
+            'evidence': [lines[2]] if len(lines) > 2 else ['No specific evidence provided']
         }
         
         # Store the case
@@ -89,7 +92,13 @@ class Judge:
         debate_text = json.dumps(self.debate_history, indent=2)
         
         prompt = f"""
-        Based on the debate about this message, provide exactly:
+        Based on the debate about this message:
+        "{topic}"
+        
+        Debate history:
+        {debate_text}
+        
+        Provide exactly:
         1. Verdict: SCAM or NOT A SCAM
         2. One sentence summary explaining why
         3. Single most important evidence point
@@ -102,8 +111,8 @@ class Judge:
         lines = [line.strip() for line in response.text.split('\n') if line.strip()]
         verdict_data = {
             'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'NOT A SCAM',
-            'summary': lines[1] if len(lines) > 1 else 'Legitimate job offer from Persistent Systems with standard recruitment details',
-            'evidence': [lines[2]] if len(lines) > 2 else ['Company details and contact information match legitimate business practices']
+            'summary': lines[1] if len(lines) > 1 else 'Analysis unavailable',
+            'evidence': [lines[2]] if len(lines) > 2 else ['No specific evidence provided']
         }
         
         # Store the case
