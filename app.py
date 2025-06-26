@@ -44,15 +44,15 @@ def analyze_message(message: str):
     
     # For complex cases, proceed with full debate
     prosecutor = AILawyer(
-        "Prosecutor Thompson",
+        "Scam Analyst",
         setup_gemini(GEMINI_KEY_1),
-        "arguing that this message shows signs of being a scam"
+        "analyzing potential scam indicators in this message using established fraud detection criteria"
     )
     
     defender = AILawyer(
-        "Defender Rodriguez",
+        "Legitimacy Analyst",
         setup_gemini(GEMINI_KEY_2),
-        "arguing for a balanced analysis of this message"
+        "analyzing indicators that suggest this message is legitimate using authentic communication patterns"
     )
     
     # Single round for message analysis

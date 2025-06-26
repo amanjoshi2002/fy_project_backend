@@ -17,23 +17,35 @@ class AILawyer:
             prompt = f"""
             You are {self.name}, {self.role_description}.
             
-            Analyze this message:
+            Analyze this message objectively:
             "{message}"
             
-            The opposing counsel has argued:
+            The opposing analyst has argued:
             "{opposing_argument}"
             
-            Provide your counter-argument, focusing on evidence and reasoning.
+            Provide your professional analysis considering:
+            - Factual evidence and patterns
+            - Industry standards and practices
+            - Common fraud indicators vs legitimate practices
+            - Objective assessment criteria
+            
+            Focus on evidence-based reasoning, not assumptions.
             Be thorough but concise (200-300 words).
             """
         else:
             prompt = f"""
             You are {self.name}, {self.role_description}.
             
-            Analyze this message:
+            Analyze this message objectively:
             "{message}"
             
-            Provide your opening argument, focusing on evidence and reasoning.
+            Provide your professional analysis considering:
+            - Factual evidence and patterns
+            - Industry standards and practices
+            - Common fraud indicators vs legitimate practices
+            - Objective assessment criteria
+            
+            Focus on evidence-based reasoning, not assumptions.
             Be thorough but concise (200-300 words).
             """
             

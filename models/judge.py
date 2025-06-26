@@ -62,11 +62,26 @@ class Judge:
         logger.info(f"Providing direct verdict for topic: {topic[:100]}...")
         
         prompt = f"""
-        Analyze if this message is a scam:
+        Analyze this message objectively to determine if it's a scam or legitimate:
         "{topic}"
         
+        Consider these scam indicators:
+        - Urgent language or pressure tactics
+        - Requests for personal/financial information
+        - Suspicious email domains or contact methods
+        - Too-good-to-be-true offers
+        - Poor grammar/spelling
+        - Generic greetings
+        
+        Consider these legitimacy indicators:
+        - Professional company domain
+        - Realistic job requirements and salary
+        - Proper contact information
+        - Clear application process
+        - No requests for money or personal details
+        
         Provide exactly:
-        1. Verdict: SCAM or NOT A SCAM
+        1. Verdict: SCAM or LEGITIMATE
         2. One sentence summary explaining why
         3. Single most important evidence point
         Keep it extremely concise.
@@ -77,7 +92,7 @@ class Judge:
         # Parse the response into structured format
         lines = [line.strip() for line in response.text.split('\n') if line.strip()]
         verdict_data = {
-            'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'NOT A SCAM',
+            'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'LEGITIMATE',
             'summary': lines[1] if len(lines) > 1 else 'Analysis unavailable',
             'evidence': [lines[2]] if len(lines) > 2 else ['No specific evidence provided']
         }
@@ -109,7 +124,7 @@ class Judge:
         {debate_text}
         
         Provide exactly:
-        1. Verdict: SCAM or NOT A SCAM
+        1. Verdict: SCAM or LEGITIMATE
         2. One sentence summary explaining why
         3. Single most important evidence point
         Keep it extremely concise.
@@ -120,7 +135,7 @@ class Judge:
         # Parse the response into structured format
         lines = [line.strip() for line in response.text.split('\n') if line.strip()]
         verdict_data = {
-            'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'NOT A SCAM',
+            'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'LEGITIMATE',
             'summary': lines[1] if len(lines) > 1 else 'Analysis unavailable',
             'evidence': [lines[2]] if len(lines) > 2 else ['No specific evidence provided']
         }
