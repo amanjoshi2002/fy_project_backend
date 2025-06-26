@@ -92,7 +92,7 @@ class Judge:
         # Parse the response into structured format
         lines = [line.strip() for line in response.text.split('\n') if line.strip()]
         verdict_data = {
-            'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'LEGITIMATE',
+            'verdict': 'SCAM' if 'scam' in lines[0].lower() else 'NOT A SCAM',
             'summary': lines[1] if len(lines) > 1 else 'Analysis unavailable',
             'evidence': [lines[2]] if len(lines) > 2 else ['No specific evidence provided']
         }
